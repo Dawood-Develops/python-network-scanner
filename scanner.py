@@ -1,5 +1,6 @@
 import socket 
 import threading
+import time   
 host_name=input("Enter the host name to check:")
 ip_address=socket.gethostbyname(host_name)
 print("IP address of", host_name, "is", ip_address)
@@ -23,9 +24,18 @@ results={}
 def scan_ports(host_name, port):
      result = check_port(host_name, port)
      results[port] = result
-     
+# thread = threading.Thread(target=check_port, args=(host_name,port))
+def get_service_name(port):
+    try:
+        service_name = socket.getservbyport(port)
+        return service_name
+    except OSError:
+        return "Unknown Service"       
 threads =[]
+start_time = time.time()
 for port in range(port_start, port_end + 1):#running loop from start port to end and print the result
+#   result = check_port(host_name, port)
+#   print("Port",port,":",result)
  thread = threading.Thread(target=scan_ports, args=(host_name,port))
  threads.append(thread)
  thread.start()
@@ -33,5 +43,13 @@ for port in range(port_start, port_end + 1):#running loop from start port to end
 
 for thread in threads:
     thread.join()
-for port, result in results.items():
-    print("Port", port, ":", result)
+end_time = time.time()
+for port, result in sorted(results.items()):
+     if result == "OPEN":
+          service_name = get_service_name(port)
+          print("Port", port, ":", result, "(", service_name, ")")
+     else:
+          print("Port", port, ":", result)
+
+scan_time = end_time - start_time
+print("Scanning completed in", round(scan_time, 2), "seconds")
