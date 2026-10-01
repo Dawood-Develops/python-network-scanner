@@ -1,11 +1,31 @@
-import socket 
+import socket
 import threading
 import time   
-host_name=input("Enter the host name to check:")
-ip_address=socket.gethostbyname(host_name)
-print("IP address of", host_name, "is", ip_address)
+try:
+    host_name=input("Enter the host name to check:")
+    ip_address=socket.gethostbyname(host_name)
+    print("IP address of", host_name, "is", ip_address)
+except socket.gaierror:
+    print("Unable to resolve host name. Please check the host name and try again.")
+    exit()  
 port_start=int(input("Enter the starting port number:"))
-port_end=int(input("Enter the ending port number:"))    
+port_end=int(input("Enter the ending port number:"))   
+
+
+def grab_banner(host_name,port):
+     s=socket.socket()
+     try:
+         s.settimeout(2)
+         s.connect((host_name,port))
+         data=s.recv(1024)
+         banner=data.decode(errors='ignore')
+     except socket.timeout:
+         banner="Unable to grab banner"
+     except OSError:
+         banner="Unable to grab banner"
+     finally:
+         s.close()
+     return banner 
 def check_port(host_name,port):#function that will take the host name and port and check the conncection
         s=socket.socket()
         s.settimeout(2)
@@ -47,7 +67,9 @@ end_time = time.time()
 for port, result in sorted(results.items()):
      if result == "OPEN":
           service_name = get_service_name(port)
+          banner=grab_banner(host_name,port)
           print("Port", port, ":", result, "(", service_name, ")")
+          print("Banner for port", port, ":", banner)
      else:
           print("Port", port, ":", result)
 
